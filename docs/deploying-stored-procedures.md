@@ -43,7 +43,7 @@ CREATE PROCEDURE FROM CLASS org.fbc.voltdb.MyProcedure;
 
 Now the procedure will be accessible by the name `MyProcedure` in your SQL queries.
 
-> Please note, that you if have more stored procedures in a jar file, you need to register every single on of them (that you are planning to use).
+> Please note, that you if have more stored procedures in a jar file, you need to register every single one of them (that you are planning to use).
 
 ## Execute the Stored Procedure
 Once the procedure is loaded into VoltDB, you can execute it via `sqlcmd`, the VoltDB client, or any application that interfaces with VoltDB.
