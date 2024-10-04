@@ -1,8 +1,11 @@
 # VoltDB Java stored procedures experiments
 
+Stored Procedures in VoltDB are great way to extend capabilities of this in-memory database and to build fast data applications.
+
 This project contains a simple example of VoltDB's stored procedure in Java.
+
 The goal is not to present all the features provided by VoltDB's stored procedure,
-but rather the worflow for development of stored procedure.
+but rather the worflow for development of stored procedure and allow to quickly start experimenting.
 
 ## Typical developent workflow
 Usually, the process goes like this:
@@ -20,6 +23,8 @@ Please, visit the documentation <https://docs.voltactivedata.com/UsingVoltDB/Des
 For Java stored procedures, you need to encapsulate the required logic (data access and manipulation) into a Java class that inherits from [VoltProcedure](https://docs.voltactivedata.com/javadoc/server-api/org/voltdb/VoltProcedure.html) (or [VoltCompoundProcedure](https://docs.voltactivedata.com/javadoc/server-api/org/voltdb/VoltCompoundProcedure.html)).
 
 > In this project, we'll be focusing on "standard" stored procedures (not the compound ones).
+
+The template for a stored procedure is:
 
 ```java
 package mypackage;
@@ -47,6 +52,21 @@ You put required logic into `run` method. This method can accept arguments, that
 
 `run()` can return long integer, [VoltTable](https://docs.voltactivedata.com/javadoc/server-api/org/voltdb/VoltTable.html), array of VoltTable.
 
+This project introduces the following example:
+
+```java
+package org.fbc.voltdb;
+import org.voltdb.*;
+public class Echo extends VoltProcedure {
+    public VoltTable[] run(String message) throws VoltAbortException {
+        VoltTable result = new VoltTable(new VoltTable.ColumnInfo("message", VoltType.STRING));
+        result.addRow("I got: " + message);
+        return new VoltTable[] { result };
+    }
+}
+```
+This creates `Echo` procedure that accepts a string as parameter and echoes this strings as a result.
+
 ## Building the procedures
 
 This project uses Maven for managing the dependencies and build process.
@@ -59,17 +79,49 @@ The configuration file ([pom.xml](./pom.xml)) contains:
 
 For your project, update artifact and version information according to your needs.
 
-You should **update Java version** of your stored procedures, to make sure it is supported by your VoltDB installation. ATTOW, [versions supported by VoltDB Server](https://docs.voltdb.com/UsingVoltDB/ChapGetStarted.php) are: Java 11, 17, or 21. (In therory, Java is backwards compatible, so staying with version 11 should be safe enough.)
+You should **set Java version** of your stored procedures, to make sure it is supported by your VoltDB installation. ATTOW, [versions supported by VoltDB Server](https://docs.voltdb.com/UsingVoltDB/ChapGetStarted.php) are: Java 11, 17, or 21. (In therory, Java is backwards compatible, so staying with version 11 should be safe enough.)
 
-To build and package the jar, use the following command:
+In this example, the pom.xml has a single dependency on [VoltDB server library](https://central.sonatype.com/artifact/org.voltdb/voltdb). Currently, the latest version available on Maven Central is 10.1.1 (see [notes about newer voltdb.jar versions](./docs/voltdb-server-lib.md)). If your Java class requires **more dependencies**, update pom.xml accordingly.
+
+Now, that the project is configured, build and package the jar using the following command:
+
 ```bash
 mvn package
 ```
 
-TBD
+This will produce stored-procedures-test-1.0-SNAPSHOT.jar (name generated from `artifactId`-`version`) in `target` directory.
+
 
 ## Loading and declaring the procedures
-TBD
+
+In order to use the stored procedure you wrote and packaged into a JAR, you need to:
+- load the JAR into VoltDB
+- declare a stored procedure (and show which class to use for it) in you schema
+
+`LOAD CLASSES` command is used load the JAR into VoltDB using the `load` command:
+
+```sql
+LOAD CLASSES stored-procedures-test-1.0-SNAPSHOT.jar;
+```
+
+Where `stored-procedures-test-1.0-SNAPSHOT.jar` is the path to the JAR file.
+
+The following SQL code declares a procedure that will be available as `Echo`:
+
+```sql
+CREATE PROCEDURE FROM CLASS org.fbc.voltdb.Echo;
+```
 
 ## Invoking the procedures
-TBD
+
+You can invoke the procedure as a SQL command (using `sqlcmd` CLI):
+
+```shell
+ubuntu@ip-172-16-0-37:~$ sqlcmd
+1> exec Echo "Hello!";
+message
+----------------
+I got: "Hello!"
+```
+
+For information, how to call the procedure from a Java client app, see [Invoking stored procedures](./docs/invoking-stored-procedures.md).

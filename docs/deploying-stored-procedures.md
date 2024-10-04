@@ -23,9 +23,9 @@ is developed and packaged into `voltdb-procedure-1.0-SNAPSHOT.jar`.
 If you want to load the stored procedure dynamically after the database is running, you can do so using `sqlcmd`.
 
 1. Open the `sqlcmd` tool:
-    ```bash
-    sqlcmd
-    ```
+```bash
+sqlcmd
+```
 
 2. Load the JAR into VoltDB using the `load` command:
 
